@@ -48,26 +48,31 @@ class MainWindow(QMainWindow):
         self.reset_selection()
         self.ui.pages.setCurrentWidget(self.ui.ui_page_1.page)
         self.ui.btn_1.set_active(True)
+        self.ui.top_right_label.setText("Home")
 
     def show_page_2(self):
         self.reset_selection()
         self.ui.pages.setCurrentWidget(self.ui.ui_page_2.page)
         self.ui.btn_2.set_active(True)
+        self.ui.top_right_label.setText("Devices")
 
     def show_page_3(self):
         self.reset_selection()
         self.ui.pages.setCurrentWidget(self.ui.ui_page_3.page)
         self.ui.btn_3.set_active(True)
+        self.ui.top_right_label.setText("Charts")
 
     def show_page_4(self):
         self.reset_selection()
         self.ui.pages.setCurrentWidget(self.ui.ui_page_4.page)
         self.ui.btn_4.set_active(True)
+        self.ui.top_right_label.setText("SCADA")
 
     def show_settings(self):
         self.reset_selection()
         self.ui.pages.setCurrentWidget(self.ui.ui_sttgs.page)
         self.ui.settings_btn.set_active(True)
+        self.ui.top_right_label.setText("Settings")
 
     def toggle_button(self):
         # Get left menu width

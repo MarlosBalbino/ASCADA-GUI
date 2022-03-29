@@ -60,7 +60,7 @@ class UI_application_page_3(object):
 
         # CENTRAL FRAME (MAIN WORKING AREA FRAME)
         self.central_frame = QFrame()
-        self.central_frame.setStyleSheet("background-color: red")
+        # self.central_frame.setStyleSheet("background-color: red")
 
         # CENTRAL FRAME LAYOUT
         self.central_frame_layout = QVBoxLayout(self.central_frame)

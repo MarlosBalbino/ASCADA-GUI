@@ -177,9 +177,9 @@ class MyScrollBar(QScrollBar):
         """)
 
 
-class ChartWindow(QFrame):
+class ChartWindow(QFrame): 
 
-    def __init__(self, height=500, width=500, color="#707070"):
+    def __init__(self, height=500, color="#707070"):
 
         super().__init__()
         
@@ -192,6 +192,7 @@ class ChartWindow(QFrame):
 
         self.top_frame = QFrame()
         self.top_frame.setMaximumHeight(30)
+        self.top_frame.setMinimumHeight(30)
         self.top_frame.setStyleSheet("background-color: black")
 
         self.top_frame_layout = QHBoxLayout(self.top_frame)

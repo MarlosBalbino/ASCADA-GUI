@@ -148,7 +148,7 @@ class UI_MainWindow(object):
         self.top_bar.setMinimumHeight(40)
         self.top_bar.setStyleSheet("background-color: #21232d; color: #6272a4")
         self.top_bar_layout = QHBoxLayout(self.top_bar)
-        self.top_bar_layout.setContentsMargins(0,0,5,0)
+        self.top_bar_layout.setContentsMargins(0,0,10,0)
 
         # left toggle btn frame
         self.toggle_btn_frame = QFrame()
@@ -166,8 +166,8 @@ class UI_MainWindow(object):
         self.spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         # right label
-        self.top_right_label = QLabel("Divices")
-        self.top_right_label.setStyleSheet("font: 700 9pt 'Segoe UI'")
+        self.top_right_label = QLabel("Home")
+        self.top_right_label.setStyleSheet("font: 700 12pt 'Segoe UI'")
 
         # add labels to top bar layout
         self.top_bar_layout.addWidget(self.toggle_btn_frame)
