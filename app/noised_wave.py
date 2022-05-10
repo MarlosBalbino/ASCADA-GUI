@@ -1,6 +1,5 @@
 import time
 import numpy as np
-from PySide6.QtCore import Signal, QObject
 from threading import Thread
 
 
@@ -31,22 +30,18 @@ class NoisedWave:
         self.x = []
         self.y = []
         self.window_points_count = round(self.fs * self.window_len)
-        self.keep_running = False
         self.thread = Thread(target=self._run)
+        self.thread.daemon = True
         self.run()
 
     def get_id(self):
         return self.wave_id
 
-    def stop(self):
-        self.keep_running = False
-
     def run(self):
-        self.keep_running = True
         self.thread.start()
 
     def _run(self):
-        while self.keep_running:
+        while True:
             # Make new points
             t0_old, self.t0 = self.t0, self.t0+self.frame_time_interval*(1-self.delay_rate)
             x = np.linspace(t0_old, self.t0, self.points_per_frame)

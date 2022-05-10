@@ -160,7 +160,7 @@ class UI_MainWindow(object):
         self.toggle_btn_layout.addWidget(self.toggle_btn)
 
         # left label
-        self.top_left_label = QLabel("Maciel Viado")
+        self.top_left_label = QLabel("Top Left Label")
 
         # spacer
         self.spacer = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)

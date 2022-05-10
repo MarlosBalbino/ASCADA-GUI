@@ -30,15 +30,14 @@ class ChartController:
         self.ts_target_id = None
 
         self.thread = Thread(target=self._run)
-        self.keep_running = False
+        self.thread.daemon = True
         self.run()
 
     def run(self):
-        self.keep_running = True
         self.thread.start()
 
     def _run(self):
-        while self.keep_running:
+        while True:
             xdata, ydata, ts_id = self.ts_queue.get()
             if ts_id not in self.ts_data.keys(): self.ts_data[ts_id] = {'x': [], 'y': []}
             ts_data = self.ts_data[ts_id]
@@ -101,9 +100,6 @@ class ChartController:
 
     def time_range_sz_handler(self, value):
         self.time_range_sz = value
-
-    def stop(self):
-        self.keep_running = False
 
     def range_min_value_handler(self, value):
         self.value_range[0] = value

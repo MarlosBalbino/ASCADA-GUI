@@ -71,17 +71,6 @@ class ChartVew(QChartView):
             OptionsKeys.ts_enable: self.ts_enable_handler
         }
 
-        self.thread = QThread()
-        self.moveToThread(self.thread)
-        self.thread.setPriority(QThread.TimeCriticalPriority)
-        self.run()
-
-    def run(self):
-        self.thread.start()
-
-    def stop(self):
-        self.thread.exit()
-
     @Slot()
     def update_chart(self):
         old_frame_instant, self.frame_instant = self.frame_instant, time()

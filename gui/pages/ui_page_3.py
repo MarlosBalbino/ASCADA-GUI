@@ -121,16 +121,12 @@ class UI_application_page_3(object):
         # CLICK EVENT
         self.add_widget_btn.clicked.connect(self.add_widget)
 
-    def add_widget(self):
-        
-        chart_window = ChartWindow(height=550)
-        
-        chart_title = 'Sines'
+        # CREATES THE WAVE SOURCES
         frame_rate = 60
         sampling_rate = 256
         color_max_i = len(Colors.Favorites.get_list()) - 1
         color_list = Colors.Favorites.get_list()
-        id_label_color_list = [
+        self.id_label_color_list = [
             {'id': 1, 'lb': 'Time Series 1', 'color': color_list[randint(0, color_max_i)]},
             {'id': 2, 'lb': 'Time Series 2', 'color': color_list[randint(0, color_max_i)]},
         ]
@@ -145,21 +141,28 @@ class UI_application_page_3(object):
                        frame_rate=frame_rate,
                        sampling_rate=sampling_rate,
                        offset=1.5,
-                       wave_id=id_label_color_list[0]['id'],
+                       wave_id=self.id_label_color_list[0]['id'],
                        f=1,
                        delay_rate=0.1),
             NoisedWave(self.waves_queue,
                        frame_rate=frame_rate,
                        sampling_rate=sampling_rate,
                        offset=3.5,
-                       wave_id=id_label_color_list[1]['id'],
+                       wave_id=self.id_label_color_list[1]['id'],
                        f=1.5)
         ]
 
-        self.ts_chart = TSChart(id_label_color_list,
+    def add_widget(self):
+        # TODO: Rise a modal window to get the chart title
+        chart_title='Sines'
+        
+        chart_window = ChartWindow(height=550)
+
+        self.ts_chart = TSChart(self.id_label_color_list,
                                 self.waves_queue,
-                                frame_rate=frame_rate,
+                                frame_rate=30,
                                 time_range_sz=5,
+                                vertical_range=(0, 5),
                                 title=chart_title)
 
         chart_window.add_widget(self.ts_chart)
