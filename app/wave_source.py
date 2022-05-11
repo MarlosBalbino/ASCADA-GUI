@@ -13,6 +13,7 @@ class WaveSource:
         tempo e um valor de amplitude. A cada intervalo de tempo (dado pelo frame rate) é
         'publicado' um frame (pacote, não confundir com a taxa de atualização dos gráficos) de
         amostras.
+
         :param wave_id: Identificador único para este sinal.
         :param amplitude: Amplitude da senoide.
         :param sampling_rate: Total de amostras geradas por segundo.
@@ -30,7 +31,7 @@ class WaveSource:
 
         self.t0 = 0
         self.points_per_frame = round(self.sampling_rate / self.frame_rate)
-        self.frame_time_interval = 1/self.frame_rate
+        self.frame_time_interval = 1 / self.frame_rate
         self.offset = offset
         self.time_samples = []
         self.value_samples = []
@@ -43,16 +44,16 @@ class WaveSource:
 
     def get_samples(self):
         """
-        :return: Uma tupla (time_samples, value_samples), onde time_samples e value_samples são
-        listas compartilnadas entre todos os consumidores deste sinal. Os consumidore devem
-        apenas ler os dados nestas listas, nunca alterá-los.
+        :return: Um dicionário {id: {time, values}}, onde time e values são listas compartilhadas
+        entre todos os consumidores deste sinal. Os consumidore devem apenas ler os dados nestas
+        listas, nunca alterá-los.
         """
-        return self.time_samples, self.value_samples
+        return self.wave_id, {'time': self.time_samples, 'values': self.value_samples}
 
     def _run(self):
         while True:
             # Make new points
-            t0_old, self.t0 = self.t0, self.t0+self.frame_time_interval*(1-self.delay_rate)
+            t0_old, self.t0 = self.t0, self.t0 + self.frame_time_interval * (1 - self.delay_rate)
             new_time_samples = np.linspace(t0_old, self.t0, self.points_per_frame)
             new_value_samples = np.sin(self.wave_frequency_rad * new_time_samples) + self.offset
             self.time_samples.extend(new_time_samples)

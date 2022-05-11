@@ -1,4 +1,4 @@
-"""PySide6 port of the charts/audio example from Qt v5.x"""
+"""PySide6 port of the charts/audio example from Qt v5.time_samples"""
 
 import sys
 from PySide6.QtCharts import QChart, QChartView, QLineSeries, QValueAxis

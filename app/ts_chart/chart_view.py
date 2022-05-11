@@ -79,8 +79,11 @@ class ChartVew(QChartView):
             # print(f'Frame rate: {1/statistics.mean(self.frame_periods):.2f} fps.')
             self.frame_periods = []
 
+        id_data = {}
         while not self.lines_data_queue.empty():
             line_id, line_data = self.lines_data_queue.get()
+            id_data[line_id] = line_data
+        for line_id, line_data in id_data.items():
             self.lines[line_id].replace(line_data)
 
         if not self.time_range_queue.empty():

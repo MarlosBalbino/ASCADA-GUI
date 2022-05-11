@@ -7,7 +7,7 @@ from gui.widgets.my_widgets import ChartWindow, MyScrollBar
 from numpy import spacing
 from qt_core import *
 
-from app.noised_wave import NoisedWave
+from app.wave_source import WaveSource
 from app.ts_chart import TSChart
 from queue import Queue
 from app.ts_chart import Colors
@@ -135,38 +135,30 @@ class UI_application_page_3(object):
         #     {'id': 2, 'lb': 'Time Series 2', 'color': Colors.Favorites.darkgreen},
         # ]
 
-        self.waves_queue = Queue()
-        self.waves = [
-            NoisedWave(self.waves_queue,
-                       frame_rate=frame_rate,
-                       sampling_rate=sampling_rate,
-                       offset=1.5,
-                       wave_id=self.id_label_color_list[0]['id'],
-                       f=1,
-                       delay_rate=0.1),
-            NoisedWave(self.waves_queue,
-                       frame_rate=frame_rate,
-                       sampling_rate=sampling_rate,
-                       offset=3.5,
-                       wave_id=self.id_label_color_list[1]['id'],
-                       f=1.5)
+        self.wave_sources = [
+            WaveSource(wave_id=self.id_label_color_list[0]['id'],
+                       sampling_rate=sampling_rate, frame_rate=frame_rate, offset=1.5,
+                       wave_frequency_hz=1, delay_rate=0.1),
+            WaveSource(wave_id=self.id_label_color_list[1]['id'],
+                       sampling_rate=sampling_rate, frame_rate=frame_rate, offset=3.5,
+                       wave_frequency_hz=1.5)
         ]
 
+        self.waves_samples = {}
+        for wave_source in self.wave_sources:
+            wave_id, time_values_samples = wave_source.get_samples()
+            self.waves_samples[wave_id] = time_values_samples
+
     def add_widget(self):
-        # TODO: Rise a modal window to get the chart title
-        chart_title='Sines'
+        # TODO: Rise a modal window to get the chart title. It may has waves colors selection too.
+        chart_title = 'Sines'
         
         chart_window = ChartWindow(height=550)
 
-        self.ts_chart = TSChart(self.id_label_color_list,
-                                self.waves_queue,
-                                frame_rate=30,
-                                time_range_sz=5,
-                                vertical_range=(0, 5),
+        self.ts_chart = TSChart(self.id_label_color_list, self.waves_samples,  frame_rate=60,
                                 title=chart_title)
 
         chart_window.add_widget(self.ts_chart)
-
 
         self.object_list.append(chart_window)
         self.central_frame_layout.addWidget(chart_window)
@@ -177,12 +169,12 @@ class UI_application_page_3(object):
                 self.scroll_area.verticalScrollBar().maximum()
             )
 
-        chart_window.btn.clicked.connect(lambda: remove_widget())
-
+        @Slot()
         def remove_widget():
             index = self.object_list.index(chart_window)
             print(index)
             self.object_list[index].deleteLater()
             self.object_list.remove(chart_window)
 
+        chart_window.btn.clicked.connect(remove_widget)
         

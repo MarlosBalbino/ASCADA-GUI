@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QMainWindow
-from noised_wave import NoisedWave
+from wave_source import WaveSource
 from ts_chart import TSChart
 from queue import Queue
 from ts_chart import Colors
@@ -27,25 +27,15 @@ class MainWindow(QMainWindow):
 
         self.waves_queue = Queue()
         self.waves = [
-            NoisedWave(self.waves_queue,
-                       frame_rate=frame_rate,
-                       sampling_rate=sampling_rate,
-                       offset=1.5,
-                       wave_id=id_label_color_list[0]['id'],
-                       f=1,
-                       delay_rate=0.1),
-            NoisedWave(self.waves_queue,
-                       frame_rate=frame_rate,
-                       sampling_rate=sampling_rate,
-                       offset=3.5,
-                       wave_id=id_label_color_list[1]['id'],
-                       f=1.5)
+            WaveSource(self.waves_queue, wave_id=id_label_color_list[0]['id'],
+                       sampling_rate=sampling_rate, frame_rate=frame_rate, offset=1.5,
+                       wave_frequency_hz=1, delay_rate=0.1),
+            WaveSource(self.waves_queue, wave_id=id_label_color_list[1]['id'],
+                       sampling_rate=sampling_rate, frame_rate=frame_rate, offset=3.5,
+                       wave_frequency_hz=1.5)
         ]
 
-        self.ts_chart = TSChart(id_label_color_list,
-                                self.waves_queue,
-                                frame_rate=frame_rate,
-                                time_range_sz=5,
+        self.ts_chart = TSChart(id_label_color_list, frame_rate=frame_rate, initial_time_range_sz=5,
                                 title=chart_title)
 
         self.setCentralWidget(self.ts_chart)
