@@ -9,7 +9,7 @@ class TSChart(QFrame):
 
     def __init__(self,
                  id_label_color_list,
-                 waves_samples,
+                 tss_samples,
                  frame_rate=60,
                  initial_time_range_sz=5,
                  initial_vertical_range=(0, 5),
@@ -17,10 +17,10 @@ class TSChart(QFrame):
         """
 
         :param id_label_color_list:
-        :param waves_samples: Um dicionário no formato:
+        :param tss_samples: Um dicionário no formato:
         {
-            wave_id_1: {time, values},
-            wave_id_2: {time, values},
+            ts_id_1: {time, values},
+            ts_id_2: {time, values},
             ...
         }
         :param frame_rate:
@@ -38,7 +38,7 @@ class TSChart(QFrame):
                                    id_label_color_list, frame_rate, title,
                                    initial_value_range=initial_vertical_range)
 
-        self.chart_controller = ChartController(waves_samples, chart_lines_queue,
+        self.chart_controller = ChartController(tss_samples, chart_lines_queue,
                                                 chart_time_range_queue, options_queue,
                                                 initial_time_range_sz)
 
@@ -59,3 +59,9 @@ class TSChart(QFrame):
         v_layout.setSpacing(0)
         v_layout.addWidget(self.chart_view)
         v_layout.addWidget(self.options)
+
+    def update_chart(self):
+        self.chart_view.update_chart()
+
+    def __del__(self):
+        self.chart_controller.stop()

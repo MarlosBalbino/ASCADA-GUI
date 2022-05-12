@@ -13,6 +13,7 @@ from queue import Queue
 from app.ts_chart import Colors
 from random import randint
 
+
 class UI_application_page_3(object):
     
     object_list = []
@@ -121,7 +122,7 @@ class UI_application_page_3(object):
         # CLICK EVENT
         self.add_widget_btn.clicked.connect(self.add_widget)
 
-        # CREATES THE WAVE SOURCES
+        # CREATES THE WAVE SOURCES AND WAVE'S DADA HANDLER
         frame_rate = 60
         sampling_rate = 256
         color_max_i = len(Colors.Favorites.get_list()) - 1
@@ -130,35 +131,49 @@ class UI_application_page_3(object):
             {'id': 1, 'lb': 'Time Series 1', 'color': color_list[randint(0, color_max_i)]},
             {'id': 2, 'lb': 'Time Series 2', 'color': color_list[randint(0, color_max_i)]},
         ]
-        # id_label_color_list = [
-        #     {'id': 1, 'lb': 'Time Series 1', 'color': Colors.Favorites.blue},
-        #     {'id': 2, 'lb': 'Time Series 2', 'color': Colors.Favorites.darkgreen},
-        # ]
 
+        self.waves_queue = Queue()
         self.wave_sources = [
-            WaveSource(wave_id=self.id_label_color_list[0]['id'],
+            WaveSource(self.waves_queue, wave_id=self.id_label_color_list[0]['id'],
                        sampling_rate=sampling_rate, frame_rate=frame_rate, offset=1.5,
                        wave_frequency_hz=1, delay_rate=0.1),
-            WaveSource(wave_id=self.id_label_color_list[1]['id'],
+            WaveSource(self.waves_queue, wave_id=self.id_label_color_list[1]['id'],
                        sampling_rate=sampling_rate, frame_rate=frame_rate, offset=3.5,
                        wave_frequency_hz=1.5)
         ]
 
+        # Creates the dict that contains the waves generated data and is shared with all TSCharts
         self.waves_samples = {}
         for wave_source in self.wave_sources:
-            wave_id, time_values_samples = wave_source.get_samples()
-            self.waves_samples[wave_id] = time_values_samples
+            self.waves_samples[wave_source.get_id()] = {'time': [], 'values': []}
+
+        # Creates the waves data handler and chart data update trigger. It handles data from
+        # waves through FIFO queue, appends these data to shared wave's data dict and triggers the
+        # TSCharts update. This occurs every time interval, given by frame_rate parameter.
+        self.ts_chart_list = []
+        def update_ts_charts():
+            while not self.waves_queue.empty():
+                wave_id, time, values = self.waves_queue.get()
+                self.waves_samples[wave_id]['time'].extend(time)
+                self.waves_samples[wave_id]['values'].extend(values)
+            for ts_chart in self.ts_chart_list:
+                ts_chart.update_chart()
+        self.timer = QTimer()
+        self.timer.setInterval(round(1/frame_rate*1000))
+        self.timer.timeout.connect(update_ts_charts)
+        self.timer.start()
 
     def add_widget(self):
-        # TODO: Rise a modal window to get the chart title. It may has waves colors selection too.
+        # TODO: Rise a modal window to get the chart title. It may has waves' colors selection too.
         chart_title = 'Sines'
         
         chart_window = ChartWindow(height=550)
 
-        self.ts_chart = TSChart(self.id_label_color_list, self.waves_samples,  frame_rate=60,
-                                title=chart_title)
+        ts_chart = TSChart(self.id_label_color_list, self.waves_samples, frame_rate=60,
+                           title=chart_title)
+        self.ts_chart_list.append(ts_chart)
 
-        chart_window.add_widget(self.ts_chart)
+        chart_window.add_widget(ts_chart)
 
         self.object_list.append(chart_window)
         self.central_frame_layout.addWidget(chart_window)
@@ -171,6 +186,7 @@ class UI_application_page_3(object):
 
         @Slot()
         def remove_widget():
+            self.ts_chart_list.remove(ts_chart)
             index = self.object_list.index(chart_window)
             print(index)
             self.object_list[index].deleteLater()

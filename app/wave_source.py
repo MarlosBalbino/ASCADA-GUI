@@ -5,9 +5,8 @@ from threading import Thread
 
 class WaveSource:
 
-    def __init__(self, wave_id=None, amplitude=1, sampling_rate=300, frame_rate=30, offset=0,
-                 wave_frequency_hz=4,
-                 delay_rate=0):
+    def __init__(self, queue, wave_id=None, amplitude=1, sampling_rate=300, frame_rate=30,
+                 offset=0, wave_frequency_hz=4, delay_rate=0):
         """
         Gera um sinal senoidal em tempo de execução. Cada amostra é composta por um valor de
         tempo e um valor de amplitude. A cada intervalo de tempo (dado pelo frame rate) é
@@ -22,6 +21,7 @@ class WaveSource:
         :param wave_frequency_hz: Frequência da senoide em Hertz.
         :param delay_rate: Taxa de atraso. Simula uma fonte de dados com atrazo temporal contínuo.
         """
+        self.queue = queue
         self.wave_id = wave_id or id(self)
         self.amplitude = amplitude
         self.sampling_rate = sampling_rate
@@ -42,20 +42,11 @@ class WaveSource:
     def get_id(self):
         return self.wave_id
 
-    def get_samples(self):
-        """
-        :return: Um dicionário {id: {time, values}}, onde time e values são listas compartilhadas
-        entre todos os consumidores deste sinal. Os consumidore devem apenas ler os dados nestas
-        listas, nunca alterá-los.
-        """
-        return self.wave_id, {'time': self.time_samples, 'values': self.value_samples}
-
     def _run(self):
         while True:
             # Make new points
             t0_old, self.t0 = self.t0, self.t0 + self.frame_time_interval * (1 - self.delay_rate)
             new_time_samples = np.linspace(t0_old, self.t0, self.points_per_frame)
             new_value_samples = np.sin(self.wave_frequency_rad * new_time_samples) + self.offset
-            self.time_samples.extend(new_time_samples)
-            self.value_samples.extend(new_value_samples)
+            self.queue.put((self.wave_id, new_time_samples, new_value_samples))
             time.sleep(self.frame_time_interval)

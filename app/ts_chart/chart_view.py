@@ -57,11 +57,11 @@ class ChartVew(QChartView):
         super().__init__(self.chart)
         self.setContentsMargins(0, 0, 0, 0)
         self.setViewportMargins(0, 0, 0, 0)
-
-        self.timer = QTimer(self)
-        self.timer.setInterval(round(1/frame_rate*1000))
-        self.timer.timeout.connect(self.update_chart)
-        self.timer.start()
+        #
+        # self.timer = QTimer(self)
+        # self.timer.setInterval(round(1/frame_rate*1000))
+        # self.timer.timeout.connect(self.update_chart)
+        # self.timer.start()
         self.frame_instant = time()
         self.frame_periods = []
 
@@ -73,11 +73,12 @@ class ChartVew(QChartView):
 
     @Slot()
     def update_chart(self):
-        old_frame_instant, self.frame_instant = self.frame_instant, time()
-        self.frame_periods.append(self.frame_instant - old_frame_instant)
-        if len(self.frame_periods) >= 100:
-            # print(f'Frame rate: {1/statistics.mean(self.frame_periods):.2f} fps.')
-            self.frame_periods = []
+        # # print frame rate
+        # old_frame_instant, self.frame_instant = self.frame_instant, time()
+        # self.frame_periods.append(self.frame_instant - old_frame_instant)
+        # if len(self.frame_periods) >= 100:
+        #     print(f'Frame rate: {1/statistics.mean(self.frame_periods):.2f} fps.')
+        #     self.frame_periods = []
 
         id_data = {}
         while not self.lines_data_queue.empty():

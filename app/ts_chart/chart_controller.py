@@ -7,7 +7,7 @@ from .constants import OptionsKeys
 class ChartController:
 
     def __init__(self,
-                 waves_samples,
+                 tss_samples,
                  chart_lines_queue,
                  chart_time_range_queue,
                  options_queue,
@@ -16,7 +16,7 @@ class ChartController:
 
         self.update_time = 0.01
 
-        self.waves_samples = waves_samples
+        self.tss_samples = tss_samples
         self.chart_lines_queue = chart_lines_queue
         self.chart_time_range_queue = chart_time_range_queue
         self.options_queue = options_queue
@@ -33,35 +33,36 @@ class ChartController:
 
         self.thread = Thread(target=self._run)
         self.thread.daemon = True
+        self.keep = True
         self.run()
 
     def run(self):
         self.thread.start()
 
     def _run(self):
-        waves_sz = {}
-        for wave_id, time_values_samples in self.waves_samples.items():
-            waves_sz[wave_id] = 0
+        tss_sz = {}
+        for ts_id, time_values_samples in self.tss_samples.items():
+            tss_sz[ts_id] = 0
 
-        while True:
+        while self.keep:
             sleep(self.update_time)
             if self.is_slider_enabled: continue
-            for wave_id, sz in waves_sz.items():
-                new_sz = len(self.waves_samples[wave_id]['time'])
+            for ts_id, sz in tss_sz.items():
+                new_sz = len(self.tss_samples[ts_id]['time'])
                 if sz == new_sz: continue
-                waves_sz[wave_id] = new_sz
-                self.handle_last_ts_data(wave_id)
+                tss_sz[ts_id] = new_sz
+                self.handle_last_ts_data(ts_id)
 
-    def handle_last_ts_data(self, wave_id):
+    def handle_last_ts_data(self, ts_id):
         if self.ts_target_id is None: return
-        if wave_id not in self.ts_enabled_list: return
-        max_time = self.waves_samples[self.ts_target_id]['time'][-1] + 0.01 * self.time_range_sz
+        if ts_id not in self.ts_enabled_list: return
+        max_time = self.tss_samples[self.ts_target_id]['time'][-1] + 0.01 * self.time_range_sz
         min_time = max_time - self.time_range_sz
-        self.update_chart(wave_id, min_time, max_time)
+        self.update_chart(ts_id, min_time, max_time)
 
     def update_chart(self, ts_id, min_time, max_time):
         if ts_id not in self.ts_enabled_list: return
-        ts_data = self.waves_samples[ts_id]
+        ts_data = self.tss_samples[ts_id]
         min_index, max_index = self.get_index_range(ts_data, min_time, max_time)
         to_plot = [QPointF(ts_data['time'][i], ts_data['values'][i]) for i in range(min_index, max_index)]
         self.chart_lines_queue.put((ts_id, to_plot))
@@ -71,10 +72,10 @@ class ChartController:
     def slider_scroll_handler(self, value):
         self.slider_value = value
         if self.ts_target_id is None: return
-        t = self.waves_samples[self.ts_target_id]['time']
+        t = self.tss_samples[self.ts_target_id]['time']
         max_time = (t[-1] - t[0]) * value / 100 + 0.01*self.time_range_sz
         min_time = max_time - self.time_range_sz
-        for ts_id, ts_data in self.waves_samples.items():
+        for ts_id, ts_data in self.tss_samples.items():
             self.update_chart(ts_id, min_time, max_time)
 
     def ts_enable_handler(self, ts_id, enable):
@@ -120,3 +121,6 @@ class ChartController:
 
     def ts_labels_handler(self, enable):
         self.options_queue.put({'key': OptionsKeys.ts_labels, 'value': enable})
+
+    def stop(self):
+        self.keep = False
