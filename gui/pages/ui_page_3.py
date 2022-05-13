@@ -1,10 +1,6 @@
-from ctypes import alignment
-from copy import deepcopy
-
 from gui.widgets.py_push_button import PyPushButton
 from gui.widgets.my_widgets import ChartWindow, MyScrollBar
 
-from numpy import spacing
 from qt_core import *
 
 from app.noised_wave import NoisedWave
@@ -16,6 +12,38 @@ from random import randint
 class UI_application_page_3(object):
     
     object_list = []
+
+    def __init__(self):
+        self.chart_title = 'Sines'
+        self.frame_rate = 60
+        self.sampling_rate = 256
+        self.color_max_i = len(Colors.Favorites.get_list()) - 1
+        self.color_list = Colors.Favorites.get_list()
+        self.id_label_color_list = [
+            {'id': 1, 'lb': 'Time Series 1', 'color': self.color_list[randint(0, self.color_max_i)]},
+            {'id': 2, 'lb': 'Time Series 2', 'color': self.color_list[randint(0, self.color_max_i)]},
+        ]
+        # id_label_color_list = [
+        #     {'id': 1, 'lb': 'Time Series 1', 'color': Colors.Favorites.blue},
+        #     {'id': 2, 'lb': 'Time Series 2', 'color': Colors.Favorites.darkgreen},
+        # ]
+
+        self.waves_queue = Queue()
+        self.waves = [
+            NoisedWave(self.waves_queue,
+                       frame_rate=self.frame_rate,
+                       sampling_rate=self.sampling_rate,
+                       offset=1.5,
+                       wave_id=self.id_label_color_list[0]['id'],
+                       f=1,
+                       delay_rate=0.1),
+            NoisedWave(self.waves_queue,
+                       frame_rate=self.frame_rate,
+                       sampling_rate=self.sampling_rate,
+                       offset=3.5,
+                       wave_id=self.id_label_color_list[1]['id'],
+                       f=1.5)
+        ]
 
     def setupUi(self, application_pages: QStackedWidget):
         if not application_pages.objectName():
@@ -49,7 +77,7 @@ class UI_application_page_3(object):
         
         # CONTENTS FRAME
         self.contents_frame = QFrame()
-        # self.contents_frame.setStyleSheet("background-color: blue")
+        #self.contents_frame.setStyleSheet("background-color: blue")
         self.contents_frame.setMinimumWidth(500)
         self.contents_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
@@ -60,7 +88,7 @@ class UI_application_page_3(object):
 
         # CENTRAL FRAME (MAIN WORKING AREA FRAME)
         self.central_frame = QFrame()
-        # self.central_frame.setStyleSheet("background-color: red")
+        #self.central_frame.setStyleSheet("background-color: red")
 
         # CENTRAL FRAME LAYOUT
         self.central_frame_layout = QVBoxLayout(self.central_frame)
@@ -69,7 +97,7 @@ class UI_application_page_3(object):
 
         # BOTTOM FRAME
         self.bottom_frame = QFrame()
-        # self.bottom_frame.setStyleSheet("background-color: green")
+        #self.bottom_frame.setStyleSheet("background-color: green")
         self.bottom_frame.setMaximumHeight(40)
 
         # BOTTOM FRAME LAYOUT
@@ -124,62 +152,37 @@ class UI_application_page_3(object):
     def add_widget(self):
         
         chart_window = ChartWindow(height=550)
-        
-        chart_title = 'Sines'
-        frame_rate = 60
-        sampling_rate = 256
-        color_max_i = len(Colors.Favorites.get_list()) - 1
-        color_list = Colors.Favorites.get_list()
-        id_label_color_list = [
-            {'id': 1, 'lb': 'Time Series 1', 'color': color_list[randint(0, color_max_i)]},
-            {'id': 2, 'lb': 'Time Series 2', 'color': color_list[randint(0, color_max_i)]},
-        ]
-        # id_label_color_list = [
-        #     {'id': 1, 'lb': 'Time Series 1', 'color': Colors.Favorites.blue},
-        #     {'id': 2, 'lb': 'Time Series 2', 'color': Colors.Favorites.darkgreen},
-        # ]
 
-        self.waves_queue = Queue()
-        self.waves = [
-            NoisedWave(self.waves_queue,
-                       frame_rate=frame_rate,
-                       sampling_rate=sampling_rate,
-                       offset=1.5,
-                       wave_id=id_label_color_list[0]['id'],
-                       f=1,
-                       delay_rate=0.1),
-            NoisedWave(self.waves_queue,
-                       frame_rate=frame_rate,
-                       sampling_rate=sampling_rate,
-                       offset=3.5,
-                       wave_id=id_label_color_list[1]['id'],
-                       f=1.5)
-        ]
-
-        self.ts_chart = TSChart(id_label_color_list,
+        ts_chart = TSChart(self.id_label_color_list,
                                 self.waves_queue,
-                                frame_rate=frame_rate,
+                                frame_rate=self.frame_rate,
                                 time_range_sz=5,
-                                title=chart_title)
+                                title=self.chart_title)
 
-        chart_window.add_widget(self.ts_chart)
+        chart_window.add_widget(ts_chart)
 
 
         self.object_list.append(chart_window)
         self.central_frame_layout.addWidget(chart_window)
         self.scroll_area.verticalScrollBar().rangeChanged.connect(lambda: scroll_down())
+        chart_window.btn.clicked.connect(lambda: remove_widget())
 
         def scroll_down():
             self.scroll_area.verticalScrollBar().setValue(
                 self.scroll_area.verticalScrollBar().maximum()
             )
 
-        chart_window.btn.clicked.connect(lambda: remove_widget())
+        
 
         def remove_widget():
             index = self.object_list.index(chart_window)
             print(index)
-            self.object_list[index].deleteLater()
+            ts_chart.stop()
+            
+            for wave in self.waves:
+                wave.stop()
+
+            chart_window.deleteLater()
             self.object_list.remove(chart_window)
 
         

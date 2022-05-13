@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QFrame, QLabel, QDoubleSpinBox, QCheckBox, QHBoxLayout, QVBoxLayout, \
     QGroupBox, QRadioButton, QGridLayout, QSizePolicy, QSpacerItem, QSlider, QPushButton
-from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve
+from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize
 
 
 class Options(QFrame):
@@ -18,6 +18,9 @@ class Options(QFrame):
                  ts_labels_handler=None,
                  parent=None):
         super().__init__(parent=parent)
+
+
+        self.setFixedSize(QSize(900, 150))
 
         self.slider_enable_handler = slider_enable_handler
         self.slider_scroll_handler = slider_scroll_handler
