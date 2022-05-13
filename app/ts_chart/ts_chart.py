@@ -1,4 +1,3 @@
-from time import sleep
 from queue import Queue, LifoQueue
 from PySide6.QtWidgets import QVBoxLayout, QFrame
 from .chart_controller import ChartController
@@ -10,29 +9,40 @@ class TSChart(QFrame):
 
     def __init__(self,
                  id_label_color_list,
-                 waves_queue,
+                 tss_samples,
                  frame_rate=60,
-                 time_range_sz=5,
+                 initial_time_range_sz=5,
+                 initial_vertical_range=(0, 5),
                  title="Sines"):
+        """
+
+        :param id_label_color_list:
+        :param tss_samples: Um dicionário no formato:
+        {
+            ts_id_1: {time, values},
+            ts_id_2: {time, values},
+            ...
+        }
+        :param frame_rate:
+        :param initial_time_range_sz:
+        :param initial_vertical_range:
+        :param title:
+        """
         super().__init__()
 
         chart_lines_queue = Queue()
         chart_time_range_queue = LifoQueue()
         options_queue = Queue()
 
-        self.chart_view = ChartVew(chart_lines_queue,
-                                   chart_time_range_queue,
-                                   options_queue,
-                                   id_label_color_list,
-                                   frame_rate,
-                                   title=title)
+        self.chart_view = ChartVew(chart_lines_queue, chart_time_range_queue, options_queue,
+                                   id_label_color_list, frame_rate, title,
+                                   initial_value_range=initial_vertical_range)
 
-        self.chart_controller = ChartController(waves_queue, chart_lines_queue,
+        self.chart_controller = ChartController(tss_samples, chart_lines_queue,
                                                 chart_time_range_queue, options_queue,
-                                                time_range_sz)
+                                                initial_time_range_sz)
 
         # Options
-        initial_vertical_range = (0, 5)
         self.options = Options(id_label_color_list,
                                self.chart_controller.range_min_value_handler,
                                self.chart_controller.range_max_value_handler,
@@ -50,8 +60,8 @@ class TSChart(QFrame):
         v_layout.addWidget(self.chart_view)
         v_layout.addWidget(self.options)
 
-    def stop(self):
-        self.chart_view.stop()
-        sleep(0.5)
+    def update_chart(self):
+        self.chart_view.update_chart()
+
+    def __del__(self):
         self.chart_controller.stop()
-        sleep(0.5)
