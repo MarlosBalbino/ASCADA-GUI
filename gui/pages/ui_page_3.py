@@ -1,3 +1,4 @@
+   
 from ctypes import alignment
 from copy import deepcopy
 
@@ -193,4 +194,3 @@ class UI_application_page_3(object):
             self.object_list.remove(chart_window)
 
         chart_window.btn.clicked.connect(remove_widget)
-        
