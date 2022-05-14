@@ -10,8 +10,8 @@ class ChartVew(QChartView):
                  lines_data_queue,
                  time_range_queue,
                  options_queue,
-                 id_label_color_list,
-                 frame_rate,
+                 ts_info,
+                 frame_rate=40,
                  title='Sines',
                  xlabel='Time [s]',
                  ylabel='Value [p.u.]',
@@ -29,14 +29,14 @@ class ChartVew(QChartView):
         self.chart.layout().setContentsMargins(0, 0, 0, 0)
         self.lines_data = {}
         self.lines = {}
-        for id_label_color in id_label_color_list:
+        for id, info in ts_info.items():
             line = QLineSeries()
             line.append([])
-            line.setName(id_label_color['lb'])
-            line.setPen(QPen(QBrush(id_label_color['color']), line_width))
+            line.setName(info['lb'])
+            line.setPen(QPen(QBrush(info['color']), line_width))
             line.setUseOpenGL(True)
-            self.lines[id_label_color['id']] = line
-            self.lines_data[id_label_color['id']] = []
+            self.lines[id] = line
+            self.lines_data[id] = []
 
         foo_line = QLineSeries()
         self.chart.addSeries(foo_line)
@@ -57,11 +57,11 @@ class ChartVew(QChartView):
         super().__init__(self.chart)
         self.setContentsMargins(0, 0, 0, 0)
         self.setViewportMargins(0, 0, 0, 0)
-        #
-        # self.timer = QTimer(self)
-        # self.timer.setInterval(round(1/frame_rate*1000))
-        # self.timer.timeout.connect(self.update_chart)
-        # self.timer.start()
+
+        self.timer = QTimer(self)
+        self.timer.setInterval(round(1/frame_rate*1000))
+        self.timer.timeout.connect(self.update_chart)
+        self.timer.start()
         self.frame_instant = time()
         self.frame_periods = []
 
@@ -79,7 +79,6 @@ class ChartVew(QChartView):
         # if len(self.frame_periods) >= 100:
         #     print(f'Frame rate: {1/statistics.mean(self.frame_periods):.2f} fps.')
         #     self.frame_periods = []
-
         id_data = {}
         while not self.lines_data_queue.empty():
             line_id, line_data = self.lines_data_queue.get()

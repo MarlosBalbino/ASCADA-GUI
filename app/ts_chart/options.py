@@ -2,11 +2,13 @@ from PySide6.QtWidgets import QFrame, QLabel, QDoubleSpinBox, QCheckBox, QHBoxLa
     QGroupBox, QRadioButton, QGridLayout, QSizePolicy, QSpacerItem, QSlider, QPushButton
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize
 
+from app import logDebug
+
 
 class Options(QFrame):
 
     def __init__(self,
-                 id_label_color_list=None,
+                 ts_info=None,
                  vertical_range_min_value_handler=None,
                  vertical_range_max_value_handler=None,
                  initial_vertical_range=(0, 5),
@@ -18,7 +20,6 @@ class Options(QFrame):
                  ts_labels_handler=None,
                  parent=None):
         super().__init__(parent=parent)
-
 
         self.setFixedSize(QSize(900, 150))
 
@@ -37,7 +38,7 @@ class Options(QFrame):
 
         self.ts_enable_handler = ts_enable_handler
         self.ts_target_handler = ts_target_handler
-        ts_selector, self.rd_dict = self.build_ts_selector(id_label_color_list)
+        ts_selector, self.rd_dict = self.build_ts_selector(ts_info)
         ret = self.build_hidden_conf_frame(left_frame, ts_selector)
         self.hidden_config_frame, self.config_expand_ani, self.config_collapse_ani = ret
 
@@ -133,25 +134,25 @@ class Options(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         return frame
 
-    def build_ts_selector(self, id_label_color_list=None, label='Sinais disponíveis'):
+    def build_ts_selector(self, ts_info=None, label='Sinais disponíveis'):
         group = QGroupBox(label)
         group.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout = QGridLayout(group)
         i = 0
         rd_dict = {}
-        for id_lb_color in id_label_color_list:
+        for id, info in ts_info.items():
             rd = QRadioButton()
-            rd.id = id_lb_color['id']
+            rd.id = id
             rd.setMaximumWidth(15)
             rd.setEnabled(False)
             rd.toggled.connect(self._ts_target_handler)
 
-            ck = QCheckBox(id_lb_color['lb'])
+            ck = QCheckBox(info['lb'])
             ck.stateChanged.connect(self._ts_enable_handler)
-            ck.id = id_lb_color['id']
-            ck.setStyleSheet(f'color: {id_lb_color["color"]}')
+            ck.id = id
+            ck.setStyleSheet(f'color: {info["color"]}')
 
-            rd_dict[id_lb_color['id']] = rd
+            rd_dict[id] = rd
 
             layout.addWidget(rd, i, 0)
             layout.addWidget(ck, i, 1)

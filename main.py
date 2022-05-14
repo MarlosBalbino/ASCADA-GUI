@@ -4,6 +4,8 @@ import time
 import threading
 from qt_core import *
 
+from app import DataGateway
+
 # IMPORT MAIN WINDOW
 from gui.windows.main_window.ui_main_window import *
 
@@ -38,6 +40,9 @@ class MainWindow(QMainWindow):
 
         # EXIBE A APLICAÇÂO
         self.show()
+
+        # STARTS THE DataGateway THREADS AND ITS TASKS
+        self.data_gateway = DataGateway()
 
     def reset_selection(self):
         for btn in self.ui.left_menu.findChildren(QPushButton):
@@ -126,7 +131,6 @@ class MainWindow(QMainWindow):
         qsettings.endGroup()
 
     def closeEvent(self, event) -> None:
-        print('close Event')
         self._writeWindowAttributeSettings()
         event.accept()
 

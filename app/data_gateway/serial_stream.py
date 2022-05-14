@@ -1,9 +1,11 @@
 import time
 import numpy as np
 from threading import Thread
+from app import logDebug
+import asyncio
 
 
-class WaveSource:
+class SerialStream:
 
     def __init__(self, queue, wave_id=None, amplitude=1, sampling_rate=300, frame_rate=30,
                  offset=0, wave_frequency_hz=4, delay_rate=0):
@@ -35,18 +37,19 @@ class WaveSource:
         self.offset = offset
         self.time_samples = []
         self.value_samples = []
-        self.thread = Thread(target=self._run)
-        self.thread.daemon = True
-        self.thread.start()
+        # self.thread = Thread(target=self._run)
+        # self.thread.daemon = True
+        # self.thread.start()
+        asyncio.create_task(self._run())
 
     def get_id(self):
         return self.wave_id
 
-    def _run(self):
+    async def _run(self):
         while True:
             # Make new points
             t0_old, self.t0 = self.t0, self.t0 + self.frame_time_interval * (1 - self.delay_rate)
             new_time_samples = np.linspace(t0_old, self.t0, self.points_per_frame)
             new_value_samples = np.sin(self.wave_frequency_rad * new_time_samples) + self.offset
-            self.queue.put((self.wave_id, new_time_samples, new_value_samples))
-            time.sleep(self.frame_time_interval)
+            await self.queue.put((self.wave_id, new_time_samples, new_value_samples))
+            await asyncio.sleep(self.frame_time_interval)
