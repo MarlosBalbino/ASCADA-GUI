@@ -2,7 +2,6 @@ import sys
 import os
 import time
 import threading
-from turtle import width
 from qt_core import *
 
 # IMPORT MAIN WINDOW
@@ -33,7 +32,10 @@ class MainWindow(QMainWindow):
 
         # Show settings
         self.ui.settings_btn.clicked.connect(self.show_settings)
-        
+
+        # RESTORES THE LAST SESSION GEOMETRIC STATE
+        self._readAndApplyWindowAttributeSettings()
+
         # EXIBE A APLICAÇÂO
         self.show()
 
@@ -97,6 +99,36 @@ class MainWindow(QMainWindow):
     def get_text(self):
         text = self.mw.text_edit.toPlainText()
         print(text)
+
+    def _readAndApplyWindowAttributeSettings(self):
+        '''
+        https://gist.github.com/bootchk/5330231
+        Read window attributes from settings,
+        using current attributes as defaults (if settings not exist.)
+        Called at QMainWindow initialization, before show().
+        '''
+        qsettings = QSettings()
+        qsettings.beginGroup("mainWindow")
+        # No need for toPoint, etc. : PySide converts types
+        self.restoreGeometry(qsettings.value("geometry", self.saveGeometry()))
+        self.restoreState(qsettings.value("saveState", self.saveState()))
+        qsettings.endGroup()
+
+    def _writeWindowAttributeSettings(self):
+        '''
+        https://gist.github.com/bootchk/5330231
+        Save window attributes as settings.
+        Called when window moved, resized, or closed.
+        '''
+        qsettings = QSettings()
+        qsettings.beginGroup("mainWindow")
+        qsettings.setValue("geometry", self.saveGeometry())
+        qsettings.endGroup()
+
+    def closeEvent(self, event) -> None:
+        print('close Event')
+        self._writeWindowAttributeSettings()
+        event.accept()
 
 
 if __name__ == "__main__":
