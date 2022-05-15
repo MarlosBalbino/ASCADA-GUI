@@ -1,6 +1,9 @@
 from threading import Thread
+import queue
 import asyncio
 from random import randint
+from serial.tools.list_ports import comports as getComPorts
+import serial
 
 from app.helpers import logDebug
 from app.ts_chart import Colors
@@ -30,48 +33,63 @@ class DataGateway:
 
     ts_data = {}
     ts_info = {}
-
-    def __init__(self):
+    port = None
+    _loop = None
+    _thread = None
+    _serial_stream = None
+    
+    @classmethod
+    def setup(cls):
 
         def get_random_color():
             color_max_i = len(Colors.Favorites.get_list()) - 1
             color_list = Colors.Favorites.get_list()
             return color_list[randint(0, color_max_i)]
-        DataGateway.ts_info = {
+        cls.ts_info = {
             1: {'lb': 'Time Series 1', 'color': get_random_color()},
             2: {'lb': 'Time Series 2', 'color': get_random_color()},
         }
-        DataGateway.ts_data = {
+        cls.ts_data = {
             1: {'time': [], 'values': []},
             2: {'time': [], 'values': []}
         }
 
-        self._waves_sources = {}
+        ports = getComPorts()
+        if len(ports) > 1:
+            raise ValueError("There are more then one com port available!")
+        elif len(ports) < 1:
+            raise ValueError("There are not ports available!")
+        port_name = ports[0].device
+        baud_rate = 1000000
+        stop_bits = serial.STOPBITS_TWO
+        cls.port = serial.Serial(port=port_name, baudrate=baud_rate, stopbits=stop_bits)
 
-        self.loop = asyncio.new_event_loop()
-        self._queue = asyncio.Queue(loop=self.loop)
-        self._thread = Thread(target=self._run_background_loop, args=[self.loop])
-        self._thread.daemon = True
-        self._thread.start()
+        cls._loop = asyncio.new_event_loop()
+        cls._out_queue = queue.Queue()
+        cls._in_ts_queue = asyncio.Queue(loop=cls._loop)
+        cls._in_flag_queue = asyncio.Queue(loop=cls._loop)
+        cls._thread = Thread(target=cls._run_background_loop, args=[cls, cls._loop])
+        cls._thread.daemon = True
+        cls._thread.start()
 
-    def _run_background_loop(self, loop: asyncio.AbstractEventLoop):
-        loop.run_until_complete(self._start_streaming())
+    @staticmethod
+    def _run_background_loop(cls, loop: asyncio.AbstractEventLoop):
+        loop.run_until_complete(cls._start_streaming(cls))
 
-    async def _start_streaming(self):
-        sampling_rate = 256
-        frame_rate = 60
-        self._waves_sources = {
-            1: SerialStream(self._queue, wave_id=1, sampling_rate=sampling_rate,
-                            frame_rate=frame_rate, offset=1.5, wave_frequency_hz=1,
-                            delay_rate=0.075),
-            2: SerialStream(self._queue, wave_id=2, sampling_rate=sampling_rate,
-                            frame_rate=frame_rate, offset=3.5, wave_frequency_hz=1.5)
-        }
-        await self._run_data_handler()
+    @staticmethod
+    async def _start_streaming(cls):
+        cls._serial_stream = SerialStream(cls.port, cls._out_queue, cls._in_ts_queue,
+                                          cls._in_flag_queue)
+        await cls._run_data_handler(cls)
 
-    async def _run_data_handler(self):
+    @staticmethod
+    async def _run_data_handler(cls):
         while True:
             # Gets a pack of generated samples from SerialStream and appends it to ts_data.
-            id, time, values = await self._queue.get()
-            self.ts_data[id]['time'].extend(time)
-            self.ts_data[id]['values'].extend(values)
+            id, time, values = await cls._in_ts_queue.get()
+            cls.ts_data[id]['time'].extend(time)
+            cls.ts_data[id]['values'].extend(values)
+
+    @classmethod
+    def stop(cls):
+        cls._serial_stream.stop()

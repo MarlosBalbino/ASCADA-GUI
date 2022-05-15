@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
         self.show()
 
         # STARTS THE DataGateway THREADS AND ITS TASKS
-        self.data_gateway = DataGateway()
+        DataGateway.setup()
 
     def reset_selection(self):
         for btn in self.ui.left_menu.findChildren(QPushButton):
@@ -131,6 +131,7 @@ class MainWindow(QMainWindow):
         qsettings.endGroup()
 
     def closeEvent(self, event) -> None:
+        DataGateway.stop()
         self._writeWindowAttributeSettings()
         event.accept()
 

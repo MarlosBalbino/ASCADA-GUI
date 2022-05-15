@@ -1,11 +1,13 @@
 from datetime import datetime
 
+level_str_sz = 6
+
 
 class LevelsStr:
-    warn = 'WARN'.ljust(5, ' ')
-    error = 'ERROR'.ljust(5, ' ')
-    info = 'INFO'.ljust(5, ' ')
-    debug = 'DEBUG'.ljust(5, ' ')
+    warn = 'WARN:'.rjust(level_str_sz, ' ')
+    error = 'ERROR:'.rjust(level_str_sz, ' ')
+    info = 'INFO:'.rjust(level_str_sz, ' ')
+    debug = 'DEBUG:'.rjust(level_str_sz, ' ')
 
 
 def logError(*args):
