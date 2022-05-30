@@ -32,7 +32,6 @@ class SerialStream:
         self._in_ts_queue = in_ts_queue
         self._in_flag_queue = in_flag_queue
         self._keep = True
-        asyncio.create_task(self._run())
         
         self._open_cmd = b'\x0d'
         self._close_cmd = b'\x0e'
@@ -65,7 +64,7 @@ class SerialStream:
         while not self._keep:
             self._keep = False
 
-    async def _run(self):
+    async def run(self):
         await asyncio.sleep(3)
         await self._write_open()
         logInfo('Streaming open on port:', self._port.name)
@@ -82,6 +81,8 @@ class SerialStream:
     async def _write_close(self):
         self._port.write(self._close_cmd)
 
+    """READ DATA FROM SERIAL"""
+
     async def _read(self):
         if self._port.in_waiting > 0:
             id_type = int.from_bytes(self._port.read(size=1), 'big')
@@ -90,63 +91,66 @@ class SerialStream:
             try:
                 self._read_parsers[DataTypes.get_type_str(type_int)](id)
             except KeyError:
-                logError("Invalid data id read!. id:", id)
+                type_hex = type_int.to_bytes(1, 'big')
+                logError("Invalid data type read!. type:", type_hex)
                 logWarn('Reopening streaming...')
                 await self._write_close()
-                await self._write_close()
+                await self._write_open()
                 logWarn('Streaming open!')
+
+    async def _read_bool8(self, id):
+        data = bool.from_bytes(self._port.read(size=1), 'big')
+        await self._in_flag_queue.put((id, data))
+
+    async def _read_uint8(self, id):
+        data = int.from_bytes(self._port.read(size=1), 'big', signed=False)
+        await self._in_flag_queue.put((id, data))
+
+    async def _read_int8(self, id):
+        data = int.from_bytes(self._port.read(size=1), 'big', signed=True)
+        await self._in_flag_queue.put((id, data))
+
+    async def _read_uint16(self, id):
+        data = int.from_bytes(self._port.read(size=2), 'big', signed=False)
+        await self._in_flag_queue.put((id, data))
+
+    async def _read_int16(self, id):
+        data = int.from_bytes(self._port.read(size=2), 'big', signed=True)
+        await self._in_flag_queue.put((id, data))
+
+    async def _read_uint32(self, id):
+        data = int.from_bytes(self._port.read(size=4), 'big', signed=False)
+        await self._in_flag_queue.put((id, data))
+
+    async def _read_int32(self, id):
+        data = int.from_bytes(self._port.read(size=4), 'big', signed=True)
+        await self._in_flag_queue.put((id, data))
+
+    async def _read_float32(self, id):
+        data, = unpack('f', self._port.read(size=4))
+        await self._in_flag_queue.put((id, data))
+
+    async def _read_ts_int16(self, id):
+        time = int.from_bytes(self._port.read(size=2), 'big', signed=True)
+        value = int.from_bytes(self._port.read(size=2), 'big', signed=True)
+        await self._in_ts_queue.put((id, time, value))
+
+    async def _read_ts_int32(self, id):
+        time = int.from_bytes(self._port.read(size=4), 'big', signed=True)
+        value = int.from_bytes(self._port.read(size=4), 'big', signed=True)
+        await self._in_ts_queue.put((id, time, value))
+
+    async def _read_ts_float32(self, id):
+        time, = unpack('f', self._port.read(size=4))
+        value, = unpack('f', self._port.read(size=4))
+        await self._in_ts_queue.put((id, time, value))
+
+    """WRITE DATA TO SERIAL"""
 
     async def _write(self):
         while not self._out_queue.empty():
             id, type_str, value = self._out_queue.get()
             self._write_parsers[type_str](id, value)
-
-    async def _read_bool8(self, id):
-        data = bool.from_bytes(self._port.read(size=1), 'big')
-        await self._in_flag_queue.put((DataTypes.get_type_str(id), data))
-
-    async def _read_uint8(self, id):
-        data = int.from_bytes(self._port.read(size=1), 'big', signed=False)
-        await self._in_flag_queue.put((DataTypes.get_type_str(id), data))
-
-    async def _read_int8(self, id):
-        data = int.from_bytes(self._port.read(size=1), 'big', signed=True)
-        await self._in_flag_queue.put((DataTypes.get_type_str(id), data))
-
-    async def _read_uint16(self, id):
-        data = int.from_bytes(self._port.read(size=2), 'big', signed=False)
-        await self._in_flag_queue.put((DataTypes.get_type_str(id), data))
-
-    async def _read_int16(self, id):
-        data = int.from_bytes(self._port.read(size=2), 'big', signed=True)
-        await self._in_flag_queue.put((DataTypes.get_type_str(id), data))
-
-    async def _read_uint32(self, id):
-        data = int.from_bytes(self._port.read(size=4), 'big', signed=False)
-        await self._in_flag_queue.put((DataTypes.get_type_str(id), data))
-
-    async def _read_int32(self, id):
-        data = int.from_bytes(self._port.read(size=4), 'big', signed=True)
-        await self._in_flag_queue.put((DataTypes.get_type_str(id), data))
-
-    async def _read_float32(self, id):
-        data = unpack('f', self._port.read(size=4))[0]
-        await self._in_flag_queue.put((DataTypes.get_type_str(id), data))
-
-    async def _read_ts_int16(self, id):
-        time = int.from_bytes(self._port.read(size=2), 'big', signed=True)
-        value = int.from_bytes(self._port.read(size=2), 'big', signed=True)
-        await self._in_ts_queue.put((DataTypes.get_type_str(id), time, value))
-
-    async def _read_ts_int32(self, id):
-        time = int.from_bytes(self._port.read(size=4), 'big', signed=True)
-        value = int.from_bytes(self._port.read(size=4), 'big', signed=True)
-        await self._in_ts_queue.put((DataTypes.get_type_str(id), time, value))
-
-    async def _read_ts_float32(self, id):
-        time = unpack('f', self._port.read(size=4))[0]
-        value = unpack('f', self._port.read(size=4))[0]
-        await self._in_ts_queue.put((DataTypes.get_type_str(id), time, value))
 
     async def _write_bool8(self, id, value):
         id_type = (int(id) << 4 | DataTypes.get_type_int('bool8')).to_bytes(1, 'big')

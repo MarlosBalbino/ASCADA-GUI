@@ -1,3 +1,5 @@
+# https://docs.python.org/3/library/asyncio.html
+
 from threading import Thread
 import queue
 import asyncio
@@ -5,7 +7,7 @@ from random import randint
 from serial.tools.list_ports import comports as getComPorts
 import serial
 
-from app.helpers import logDebug
+from app import logDebug
 from app.ts_chart import Colors
 from .serial_stream import SerialStream
 
@@ -33,10 +35,15 @@ class DataGateway:
 
     ts_data = {}
     ts_info = {}
+    in_flag = {}
     port = None
     _loop = None
     _thread = None
     _serial_stream = None
+    _port = None
+    _out_queue = None
+    _in_ts_queue = None
+    _in_flag_queue = None
     
     @classmethod
     def setup(cls):
@@ -65,25 +72,31 @@ class DataGateway:
         cls.port = serial.Serial(port=port_name, baudrate=baud_rate, stopbits=stop_bits)
 
         cls._loop = asyncio.new_event_loop()
-        cls._out_queue = queue.Queue()
         cls._in_ts_queue = asyncio.Queue(loop=cls._loop)
         cls._in_flag_queue = asyncio.Queue(loop=cls._loop)
-        cls._thread = Thread(target=cls._run_background_loop, args=[cls, cls._loop])
+        cls._out_queue = queue.Queue()
+        cls._serial_stream = SerialStream(cls.port, cls._out_queue, cls._in_ts_queue,
+                                          cls._in_flag_queue)
+
+        cls._thread = Thread(target=cls._run_background_loop)
         cls._thread.daemon = True
         cls._thread.start()
 
-    @staticmethod
-    def _run_background_loop(cls, loop: asyncio.AbstractEventLoop):
-        loop.run_until_complete(cls._start_streaming(cls))
+    @classmethod
+    def _run_background_loop(cls):
+        cls._loop.run_until_complete(cls._start_streaming())
 
-    @staticmethod
+    @classmethod
     async def _start_streaming(cls):
-        cls._serial_stream = SerialStream(cls.port, cls._out_queue, cls._in_ts_queue,
-                                          cls._in_flag_queue)
-        await cls._run_data_handler(cls)
+        await asyncio.gather(cls._serial_stream.run(), cls._run_in_ts_handler(),
+                             cls._run_in_flag_handler())
 
-    @staticmethod
-    async def _run_data_handler(cls):
+    @classmethod
+    async def _run_in_ts_handler(cls):
+        """
+        Gets data from _in_ts_queue and puts it in ts_data. The data in _in_ts_queue is arrived
+        throught serial.
+        """
         while True:
             # Gets a pack of generated samples from SerialStream and appends it to ts_data.
             id, time, values = await cls._in_ts_queue.get()
@@ -91,5 +104,27 @@ class DataGateway:
             cls.ts_data[id]['values'].extend(values)
 
     @classmethod
+    async def _run_in_flag_handler(cls):
+        """
+        Gets data from _in_flag_queue and puts it in _xxx_. The data in _in_flag_queue is arrived
+        throught serial.
+        """
+        id, value = await cls._in_flag_queue.get()
+        cls.in_flag[id] = value
+        logDebug(f"Flag received. id: {id}    value: {value}")
+
+    @classmethod
+    def send_flag(cls, id, type_str, value):
+        """
+        Puts data from user input to _out_queue, to be sent throught serial.
+
+        :param type_str: Attribute of DataTypes (str).
+        """
+        cls._out_queue.put(id, type_str, value)
+        logDebug(f"Flag sent. id: {id}    type: {type_str}    value: {value}")
+
+    @classmethod
     def stop(cls):
         cls._serial_stream.stop()
+        cls._loop.stop()
+        logDebug("DataGateway stopped!")
