@@ -10,17 +10,22 @@ class LevelsStr:
     debug = 'DEBUG:'.rjust(level_str_sz, ' ')
 
 
+def getTimeStamp(ms_divider=1e5):
+    now = datetime.now()
+    return now.strftime('%Y-%m-%d %H:%m:%S.') + str(round(now.microsecond/ms_divider))
+
+
 def logError(*args):
-    print(datetime.now(), LevelsStr.info, *args)
+    print(getTimeStamp(), LevelsStr.info, *args)
 
 
 def logInfo(*args):
-    print(datetime.now(), LevelsStr.info, *args)
+    print(getTimeStamp(), LevelsStr.info, *args)
 
 
 def logWarn(*args):
-    print(datetime.now(), LevelsStr.info, *args)
+    print(getTimeStamp(), LevelsStr.info, *args)
 
 
 def logDebug(*args):
-    print(datetime.now(), LevelsStr.info, *args)
+    print(getTimeStamp(), LevelsStr.info, *args)
