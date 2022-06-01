@@ -16,7 +16,7 @@ def getTimeStamp(ms_divider=1e5):
 
 
 def logError(*args):
-    print(getTimeStamp(), LevelsStr.info, *args)
+    print(getTimeStamp(), LevelsStr.error, *args)
 
 
 def logInfo(*args):
@@ -24,8 +24,8 @@ def logInfo(*args):
 
 
 def logWarn(*args):
-    print(getTimeStamp(), LevelsStr.info, *args)
+    print(getTimeStamp(), LevelsStr.warn, *args)
 
 
 def logDebug(*args):
-    print(getTimeStamp(), LevelsStr.info, *args)
+    print(getTimeStamp(), LevelsStr.debug, *args)

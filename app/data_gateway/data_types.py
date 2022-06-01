@@ -11,7 +11,7 @@ class DataTypes:
     ts_int32 = 'ts_int32'
     ts_float32 = 'ts_float32'
 
-    _types = {
+    types = {
         # id of data type: string name of data type
         1: 'bool8',
         2: 'uint8',
@@ -26,11 +26,16 @@ class DataTypes:
         11: 'ts_float32',
     }
 
+    open_cmd = b'\x0e'
+    close_cmd = b'\x0f'
+    type_mask = b'\x0f'
+
     @classmethod
     def get_type_str(cls, type_int: int) -> str:
-        return cls._types[type_int]
+        return cls.types[type_int]
 
     @classmethod
     def get_type_int(cls, type_str: str) -> int:
-        for key, value in cls._types.items():
-            if key == type_str: return key
+        for tp_int, tp_str in cls.types.items():
+            if tp_str == type_str:
+                return tp_int

@@ -1,5 +1,5 @@
 # https://docs.python.org/3/library/asyncio.html
-
+import time
 from threading import Thread
 import queue
 import asyncio
@@ -7,7 +7,7 @@ from random import randint
 from serial.tools.list_ports import comports as getComPorts
 import serial
 
-from app import logDebug
+from app import logDebug, logError, logWarn, logInfo
 from app.ts_chart import Colors
 from .serial_stream import SerialStream
 
@@ -36,14 +36,13 @@ class DataGateway:
     ts_data = {}
     ts_info = {}
     in_flag = {}
-    port = None
-    _loop = None
-    _thread = None
-    _serial_stream = None
-    _port = None
-    _out_queue = None
-    _in_ts_queue = None
-    _in_flag_queue = None
+    _loop: asyncio.AbstractEventLoop = None
+    _thread: Thread = None
+    _serial_stream: SerialStream = None
+    _port: serial.Serial = None
+    _out_queue: queue.Queue = None
+    _in_ts_queue: asyncio.Queue = None
+    _in_flag_queue: asyncio.Queue = None
     
     @classmethod
     def setup(cls):
@@ -69,13 +68,15 @@ class DataGateway:
         port_name = ports[0].device
         baud_rate = 1000000
         stop_bits = serial.STOPBITS_TWO
-        cls.port = serial.Serial(port=port_name, baudrate=baud_rate, stopbits=stop_bits)
+        cls._port = serial.Serial(port=port_name, baudrate=baud_rate, stopbits=stop_bits)
 
         cls._loop = asyncio.new_event_loop()
+        cls._loop.set_exception_handler(cls._event_loop_exception_handler)
+        cls._loop.set_debug(True)
         cls._in_ts_queue = asyncio.Queue(loop=cls._loop)
         cls._in_flag_queue = asyncio.Queue(loop=cls._loop)
         cls._out_queue = queue.Queue()
-        cls._serial_stream = SerialStream(cls.port, cls._out_queue, cls._in_ts_queue,
+        cls._serial_stream = SerialStream(cls._port, cls._out_queue, cls._in_ts_queue,
                                           cls._in_flag_queue)
 
         cls._thread = Thread(target=cls._run_background_loop)
@@ -84,12 +85,21 @@ class DataGateway:
 
     @classmethod
     def _run_background_loop(cls):
-        cls._loop.run_until_complete(cls._start_streaming())
+        async def start_streaming():
+            await asyncio.gather(
+                cls._serial_stream.run(),
+                cls._run_in_ts_handler(),
+                cls._run_in_flag_handler()
+            )
+        cls._loop.run_until_complete(start_streaming())
 
-    @classmethod
-    async def _start_streaming(cls):
-        await asyncio.gather(cls._serial_stream.run(), cls._run_in_ts_handler(),
-                             cls._run_in_flag_handler())
+    @staticmethod
+    def _event_loop_exception_handler(loop, context):
+        logError("EventsLoopError:",
+                 "\n\tMessage:", context['message'],
+                 "\n\tException:", context['exception'],
+                 "\n\tFuture:", context['future'],
+                 "\n\tTask:", context['task'])
 
     @classmethod
     async def _run_in_ts_handler(cls):
@@ -106,25 +116,24 @@ class DataGateway:
     @classmethod
     async def _run_in_flag_handler(cls):
         """
-        Gets data from _in_flag_queue and puts it in _xxx_. The data in _in_flag_queue is arrived
+        Gets data from _in_flag_queue and puts it in in_flag. The data in _in_flag_queue is arrived
         throught serial.
         """
-        id, value = await cls._in_flag_queue.get()
-        cls.in_flag[id] = value
-        logDebug(f"Flag received. id: {id}    value: {value}")
+        while True:
+            id, value = await cls._in_flag_queue.get()
+            cls.in_flag[id] = value
 
     @classmethod
     def send_flag(cls, id, type_str, value):
         """
         Puts data from user input to _out_queue, to be sent throught serial.
-
         :param type_str: Attribute of DataTypes (str).
         """
-        cls._out_queue.put(id, type_str, value)
-        logDebug(f"Flag sent. id: {id}    type: {type_str}    value: {value}")
+        cls._out_queue.put((id, type_str, value))
 
     @classmethod
     def stop(cls):
-        cls._serial_stream.stop()
-        cls._loop.stop()
-        logDebug("DataGateway stopped!")
+        cls._loop.call_soon_threadsafe(cls._serial_stream.stop)
+        if not cls._serial_stream.stopped.wait(1):
+            logWarn('Streamming took too long to stop! Forcing stop.')
+        logInfo("DataGateway stopped!")
