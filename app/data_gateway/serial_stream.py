@@ -1,3 +1,5 @@
+# https://pyserial.readthedocs.io/en/stable/
+
 import threading
 
 from app import logDebug, logError, logWarn, logInfo
@@ -64,6 +66,7 @@ class SerialStream:
 
     async def run(self):
         await asyncio.sleep(3)
+        self._port.reset_input_buffer()
         self._write_open()
         while self._keep_running:
             await asyncio.create_task(self._read())
@@ -130,17 +133,17 @@ class SerialStream:
     def _read_ts_int16(self, id):
         time = int.from_bytes(self._port.read(size=2), 'big', signed=True)
         value = int.from_bytes(self._port.read(size=2), 'big', signed=True)
-        self._in_ts_queue.put((id, time, value))
+        self._in_ts_queue.put_nowait((id, time, value))
 
     def _read_ts_int32(self, id):
         time = int.from_bytes(self._port.read(size=4), 'big', signed=True)
         value = int.from_bytes(self._port.read(size=4), 'big', signed=True)
-        self._in_ts_queue.put((id, time, value))
+        self._in_ts_queue.put_nowait((id, time, value))
 
     def _read_ts_float32(self, id):
         time, = unpack('f', self._port.read(size=4))
         value, = unpack('f', self._port.read(size=4))
-        self._in_ts_queue.put((id, time, value))
+        self._in_ts_queue.put_nowait((id, time, value))
 
     """WRITE DATA TO SERIAL"""
 
