@@ -86,9 +86,9 @@ class SerialStream:
 
     async def _read(self):
         while self._port.in_waiting > 0:
-            id_type = int.from_bytes(self._port.read(size=1), 'big')
+            id_type = int.from_bytes(self._port.read(size=1), 'little')
             id = id_type >> 4
-            type_int = id_type & int.from_bytes(DataTypes.type_mask, 'big')
+            type_int = id_type & int.from_bytes(DataTypes.type_mask, 'little')
             try:
                 self._read_parsers[DataTypes.get_type_str(type_int)](id)
             except KeyError:
@@ -99,31 +99,31 @@ class SerialStream:
                 logWarn('Streaming open!')
 
     def _read_bool8(self, id):
-        value = bool.from_bytes(self._port.read(size=1), 'big')
+        value = bool.from_bytes(self._port.read(size=1), 'little')
         self._in_flag_queue.put_nowait((id, value))
 
     def _read_uint8(self, id):
-        value = int.from_bytes(self._port.read(size=1), 'big', signed=False)
+        value = int.from_bytes(self._port.read(size=1), 'little', signed=False)
         self._in_flag_queue.put_nowait((id, value))
 
     def _read_int8(self, id):
-        value = int.from_bytes(self._port.read(size=1), 'big', signed=True)
+        value = int.from_bytes(self._port.read(size=1), 'little', signed=True)
         self._in_flag_queue.put_nowait((id, value))
 
     def _read_uint16(self, id):
-        value = int.from_bytes(self._port.read(size=2), 'big', signed=False)
+        value = int.from_bytes(self._port.read(size=2), 'little', signed=False)
         self._in_flag_queue.put_nowait((id, value))
 
     def _read_int16(self, id):
-        value = int.from_bytes(self._port.read(size=2), 'big', signed=True)
+        value = int.from_bytes(self._port.read(size=2), 'little', signed=True)
         self._in_flag_queue.put_nowait((id, value))
 
     def _read_uint32(self, id):
-        value = int.from_bytes(self._port.read(size=4), 'big', signed=False)
+        value = int.from_bytes(self._port.read(size=4), 'little', signed=False)
         self._in_flag_queue.put_nowait((id, value))
 
     def _read_int32(self, id):
-        value = int.from_bytes(self._port.read(size=4), 'big', signed=True)
+        value = int.from_bytes(self._port.read(size=4), 'little', signed=True)
         self._in_flag_queue.put_nowait((id, value))
 
     def _read_float32(self, id):
@@ -131,13 +131,13 @@ class SerialStream:
         self._in_flag_queue.put_nowait((id, value))
 
     def _read_ts_int16(self, id):
-        time = int.from_bytes(self._port.read(size=2), 'big', signed=True)
-        value = int.from_bytes(self._port.read(size=2), 'big', signed=True)
+        time = int.from_bytes(self._port.read(size=2), 'little', signed=True)
+        value = int.from_bytes(self._port.read(size=2), 'little', signed=True)
         self._in_ts_queue.put_nowait((id, time, value))
 
     def _read_ts_int32(self, id):
-        time = int.from_bytes(self._port.read(size=4), 'big', signed=True)
-        value = int.from_bytes(self._port.read(size=4), 'big', signed=True)
+        time = int.from_bytes(self._port.read(size=4), 'little', signed=True)
+        value = int.from_bytes(self._port.read(size=4), 'little', signed=True)
         self._in_ts_queue.put_nowait((id, time, value))
 
     def _read_ts_float32(self, id):
@@ -161,41 +161,41 @@ class SerialStream:
                 )
 
     def _write_bool8(self, id, value):
-        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.bool8)).to_bytes(1, 'big')
-        value = bool(value).to_bytes(1, 'big')
+        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.bool8)).to_bytes(1, 'little')
+        value = bool(value).to_bytes(1, 'little')
         self._port.write(id_type + value)
 
     def _write_uint8(self, id, value):
-        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.uint8)).to_bytes(1, 'big')
-        value = int(value).to_bytes(1, 'big', signed=False)
+        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.uint8)).to_bytes(1, 'little')
+        value = int(value).to_bytes(1, 'little', signed=False)
         self._port.write(id_type + value)
 
     def _write_int8(self, id, value):
-        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.int8)).to_bytes(1, 'big')
-        value = int(value).to_bytes(1, 'big', signed=True)
+        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.int8)).to_bytes(1, 'little')
+        value = int(value).to_bytes(1, 'little', signed=True)
         self._port.write(id_type + value)
 
     def _write_uint16(self, id, value):
-        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.uint16)).to_bytes(1, 'big')
-        value = int(value).to_bytes(2, 'big', signed=False)
+        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.uint16)).to_bytes(1, 'little')
+        value = int(value).to_bytes(2, 'little', signed=False)
         self._port.write(id_type + value)
 
     def _write_int16(self, id, value):
-        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.int16)).to_bytes(1, 'big')
-        value = int(value).to_bytes(2, 'big', signed=True)
+        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.int16)).to_bytes(1, 'little')
+        value = int(value).to_bytes(2, 'little', signed=True)
         self._port.write(id_type + value)
 
     def _write_uint32(self, id, value):
-        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.uint32)).to_bytes(1, 'big')
-        value = int(value).to_bytes(4, 'big', signed=False)
+        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.uint32)).to_bytes(1, 'little')
+        value = int(value).to_bytes(4, 'little', signed=False)
         self._port.write(id_type + value)
 
     def _write_int32(self, id, value):
-        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.int32)).to_bytes(1, 'big')
-        value = int(value).to_bytes(4, 'big', signed=True)
+        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.int32)).to_bytes(1, 'little')
+        value = int(value).to_bytes(4, 'little', signed=True)
         self._port.write(id_type + value)
 
     def _write_float32(self, id, value):
-        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.float32)).to_bytes(1, 'big')
+        id_type = (int(id) << 4 | DataTypes.get_type_int(DataTypes.float32)).to_bytes(1, 'little')
         value = pack('f', float(value))
         self._port.write(id_type + value)

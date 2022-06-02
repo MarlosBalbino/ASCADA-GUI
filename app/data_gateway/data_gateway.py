@@ -1,5 +1,5 @@
 # https://docs.python.org/3/library/asyncio.html
-import time
+from time import sleep
 from threading import Thread
 import queue
 import asyncio
@@ -10,6 +10,8 @@ import serial
 from app import logDebug, logError, logWarn, logInfo
 from app.ts_chart import Colors
 from .serial_stream import SerialStream
+
+import csv
 
 
 class DataGateway:
@@ -109,9 +111,9 @@ class DataGateway:
         """
         while True:
             # Gets a pack of generated samples from SerialStream and appends it to ts_data.
-            id, time, values = await cls._in_ts_queue.get()
-            cls.ts_data[id]['time'].extend(time)
-            cls.ts_data[id]['values'].extend(values)
+            id, time, value = await cls._in_ts_queue.get()
+            cls.ts_data[id]['time'].append(time)
+            cls.ts_data[id]['values'].append(value)
 
     @classmethod
     async def _run_in_flag_handler(cls):
@@ -136,4 +138,21 @@ class DataGateway:
         cls._loop.call_soon_threadsafe(cls._serial_stream.stop)
         if not cls._serial_stream.stopped.wait(1):
             logWarn('Streamming took too long to stop! Forcing stop.')
+        # cls.save_ts_data_to_csv()
         logInfo("DataGateway stopped!")
+
+    @classmethod
+    def save_ts_data_to_csv(cls, file_name='ts_1_0.csv'):
+        logDebug('Saving to file...')
+
+        with open(file_name, 'w') as f:
+            csv_writer = csv.writer(f)
+            time = cls.ts_data[1]['time']
+            value = cls.ts_data[1]['values']
+            time_sz = len(time)
+            value_sz = len(value)
+            csv_writer.writerow(('time', 'value'))
+            for i in range(value_sz if value_sz > time_sz else time_sz):
+                csv_writer.writerow((time[i], value[i]))
+
+        logDebug('Saved!')
