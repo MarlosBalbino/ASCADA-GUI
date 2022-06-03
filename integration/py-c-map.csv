@@ -1,0 +1,21 @@
+ASCADA-GUI Git Log;ASCADA-AT328p Git Log
+-;-
+commit 95b61a19d0916e44fa36ed97b98b11d51b46e9da;commit c1105f87667ffcc38cb38d5212c11f45a5a3d6fc
+Author: Maciel Balbino Nunes <mnn@certi.org.br>;Author: Maciel Balbino Nunes <mnn@certi.org.br>
+Date:   Wed Jun 1 15:51:29 2022 -0300;Date:   Wed Jun 1 15:53:28 2022 -0300
+    Implements the out and in flag stream;    Implements echo for all data types (flags for while)
+-;-
+commit 4818b306ed3955d12d143243492cb9e3d18d6a03;commit c1105f87667ffcc38cb38d5212c11f45a5a3d6fc
+Author: Maciel Balbino Nunes <mnn@certi.org.br>;Author: Maciel Balbino Nunes <mnn@certi.org.br>
+Date:   Thu Jun 2 14:16:26 2022 -0300;Date:   Wed Jun 1 15:53:28 2022 -0300
+    Fixes in_ts_queue put in _read_ts_ methods;    Implements echo for all data types (flags for while)
+-;-
+commit 6fe7e0a3d2d5bdf5179d68e4d5db0475c968f688;commit 5849e626a2c2237df64cf4c3696e52f21aad12bb
+Author: Maciel Balbino Nunes <mnn@certi.org.br>;Author: Maciel Balbino Nunes <mnn@certi.org.br>
+Date:   Thu Jun 2 15:04:31 2022 -0300;Date:   Thu Jun 2 15:11:02 2022 -0300
+    Fixes little endian to big endian and ts_data.extend to ts_data.append;    Implements a float32 sine wave stream
+-;-
+commit 6fe7e0a3d2d5bdf5179d68e4d5db0475c968f688;commit 5849e626a2c2237df64cf4c3696e52f21aad12bb
+Author: Maciel Balbino Nunes <mnn@certi.org.br>;Author: Maciel Balbino Nunes <mnn@certi.org.br>
+Date:   Thu Jun 2 15:04:31 2022 -0300;Date:   Thu Jun 2 15:11:02 2022 -0300
+    Fixes little endian to big endian and ts_data.extend to ts_data.append;    Implements a float32 sine wave stream
