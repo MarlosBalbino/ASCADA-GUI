@@ -3,14 +3,32 @@ from time import time
 
 from PySide6.QtCore import QObject, Signal, Slot, QRunnable, QThreadPool, QThread
 
-from ts_chart import TsChart
-from ts_chart import ChartController
+from .ts_chart import TsChart
+from .ts_chart import ChartController
+
+
+class DataGateway:
+
+    _data_gateway = None
+
+    @classmethod
+    def setup(cls):
+        cls._data_gateway = _DataGateway()
+
+    @classmethod
+    def get_new_chart(cls):
+        return cls._data_gateway.get_new_chart()
+
+    @classmethod
+    def stop(cls):
+        cls._data_gateway.stop()
+
 
 class DataGatewaySignals(QObject):
     update_charts = Signal(dict)
 
 
-class DataGateway(QRunnable):
+class _DataGateway(QRunnable):
 
     def __init__(self):
         super().__init__()
@@ -27,7 +45,7 @@ class DataGateway(QRunnable):
             1: {'f': 2*np.pi/2, 'step': 4e-3, 'frm_n': 25},
             2: {'f': 2*np.pi/3, 'step': 4.1e-3, 'frm_n': 25}
         }
-        self.update_freq = 30       # Flushes the icomming data and updates the plots "update_freq" times per second
+        self.update_freq = 20       # Flushes the icomming data and updates the plots "update_freq" times per second
 
         self.controllers = {}
         self._signals = DataGatewaySignals()
