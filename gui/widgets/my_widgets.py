@@ -225,3 +225,5 @@ class ChartWindow(QFrame):
 
     def add_widget(self, widget: QFrame):
         self.bottom_frame_layout.addWidget(widget)
+        self.destroyed.connect(widget.close)
+        self.btn.clicked.connect(lambda: self.deleteLater())

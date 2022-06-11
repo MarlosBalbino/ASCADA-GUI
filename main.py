@@ -1,8 +1,4 @@
 import sys
-import os
-import time
-import threading
-from turtle import width
 from qt_core import *
 
 # IMPORT MAIN WINDOW
