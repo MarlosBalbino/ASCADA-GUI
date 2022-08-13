@@ -31,7 +31,7 @@
 - TimeSerie: Por exemplo o valor da corrente ao longo do tempo.  Pode-se pensar nesse tipo de variável como um vetor ou lista bidimensional, representando pares ordenados, designados aqui como **Abscissa** e **Ordenada**. Embora seja mais intuitivo pensar nesse tipo de variável como sempre representando valores de tempo e amplitude nem sempre este será o caso, mas qualquer sinal bidimensional, onde os dados vão chegando ou saindo do ASCADA, aumentando o número de elementos na lista ou vetor a medida que o tempo passa;
 
 &emsp;Cada variável é identificada por um código hexadecimal de 8 bits. As variáveis são cadastradas no ASCADA atribuindo para cada variável os seguintes descritores:
-- Código de identificação único (obrigatório): hexadecimal de 1 byte
+- Código de identificação: um número no intervalo [0, 255], único (nunca haverá duas variáveis com o mesmo código de identificação). Será exibido ao usuário em formato hexadecimal (2 caracteres)
 - Nome (opcional): string de até 20 caracteres (futuramente deverá suportar caracteres matemáticos especiais e índices com sintaxe Latex);
 - Tipo de variável (obrigatório): Flag, Serie ou TimeSerie;
 - Tipo de dado (obrigatório): bool, char, int8, int16, int32, int64, float32 ou float64. No caso de variáveis TimeSerie precisa ser especificado o tipo do dado da Abscissa e o tipo da Ordenada;
