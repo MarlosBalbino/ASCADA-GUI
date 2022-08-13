@@ -4,7 +4,7 @@ import threading
 from app import logDebug, logError, logWarn, logInfo
 import asyncio
 from struct import pack, unpack
-from .data_types import DataTypes
+from ...Types import DataTypes
 
 
 class SerialStream:

@@ -1,19 +1,62 @@
 import numpy as np
 from time import time
+import random
 
-from PySide6.QtCore import QObject, Signal, Slot, QRunnable, QThreadPool, QThread
+from PySide6.QtCore import QObject, Signal, Slot, QRunnable, QThreadPool, QThread, QTimer
 
 from .ts_chart import TsChart
 from .ts_chart import ChartController
+from .Types import DataTypes, VarTypes
 
 
 class DataGateway:
 
     _data_gateway = None
+    _arriving_flags_handlers = {}       # Ex.: {var_id_1: var_handler_1, var_id_2: var_handler_2, ...}
+    _variables = {}                     # Ex.: {var_id: {"name": str, "description": str, "var_type": str, "data_type": str}, ...}
+
+    def __init__(self) -> None:
+        raise SyntaxError("This is a static class. You should never instantiate it!")
 
     @classmethod
     def setup(cls):
         cls._data_gateway = _DataGateway()
+
+        # Para teste
+
+        cls._variables =  {
+            1: {'var_type': VarTypes.FLAG, 'data_type': DataTypes.BOOL},
+            2: {'var_type': VarTypes.FLAG, 'data_type': DataTypes.CHAR},
+            3: {'var_type': VarTypes.FLAG, 'data_type': DataTypes.INT16},
+            4: {'var_type': VarTypes.FLAG, 'data_type': DataTypes.FLOAT32}
+        }
+
+        # #   Simula slot de widget para teste.
+        # for var_id in range(1, 5):
+        #     cls.add_flag_widget(var_id, lambda value: print(value))
+
+        #   Emite um valor para cada widget conectado
+        value_generators = {
+            DataTypes.BOOL: lambda: bool(random.randint(0, 1)),
+            DataTypes.CHAR: lambda: random.choice('ABCDEFGHIJKLMOPQRSTUVWXYZ'),
+            DataTypes.INT8: lambda: random.randint(0,255),
+            DataTypes.INT16: lambda: random.randint(0,int(pow(2, 16))),
+            DataTypes.INT32: lambda: random.randint(0,int(pow(2, 32))),
+            DataTypes.INT64: lambda: random.randint(0, int(pow(2, 64))),
+            DataTypes.FLOAT32: lambda: random.random() * 100,
+            DataTypes.FLOAT64: lambda: random.random() * 200,
+        }
+
+        def vars_mock():
+            print('vars_mock')
+            for var_id, handler in cls._arriving_flags_handlers.items():
+                print(var_id)
+                data_type = cls._variables[var_id]['data_type']
+                handler(value_generators[data_type]())
+
+        cls.timer = QTimer()
+        cls.timer.timeout.connect(vars_mock)
+        cls.timer.start(1000)
 
     @classmethod
     def get_new_chart(cls):
@@ -22,6 +65,40 @@ class DataGateway:
     @classmethod
     def stop(cls):
         cls._data_gateway.stop()
+
+    @classmethod
+    def add_flag_widget(cls, var_id: int, flag_handler: Slot):
+        """
+        Este método conecta a entrada de dados de uma variável do tipo flag a um widget que exibe o valor da variável.
+        A conexão é feita através da emissão de um sinal (Signal) que chama um método (Slot) implementado no widget
+        para receber o valor sempre que um novo valor for recebido do Arduino.
+
+        Arguments:
+            var_id: Um inteiro no intervalo [0, 255], que identifica a variável
+            flag_handler:   Um Slot que recebe o valor da variável.
+                            Considere os tipos de dados e os respectivos tipos que devem ser aceitos pelo Slot (tipo em C: tipo em Python):
+                                bool: bool
+                                char: str
+                                int (8, 16, 32, 64): int
+                                float32, float64: float
+        """
+        # Verifica se o id da variável é um inteiro no intervalo [0, 255], se existe uma variável cadastrada com o id e se não existe nenhum widget (Slot) associado à variável
+        assert isinstance(var_id, int)
+        assert var_id in range(256)
+        assert var_id in cls._variables.keys()
+        assert var_id not in cls._arriving_flags_handlers.keys()
+
+        cls._arriving_flags_handlers[var_id] = flag_handler
+
+    @classmethod
+    def rm_flag_widget(cls, var_id):
+        """
+        Desconecta entrada de dados para o widget.
+        """
+        try:
+            cls._arriving_flags_handlers.pop(var_id)
+        except KeyError:
+            raise ValueError(f'The variable with id "{var_id}" is not connected to widget Slot!')
 
 
 class DataGatewaySignals(QObject):
