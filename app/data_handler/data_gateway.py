@@ -1,3 +1,4 @@
+from inspect import classify_class_attrs
 import numpy as np
 from time import time
 import random
@@ -35,7 +36,7 @@ class DataGateway:
         # for var_id in range(1, 5):
         #     cls.add_flag_widget(var_id, lambda value: print(value))
 
-        #   Emite um valor para cada widget conectado
+        #   Emite um valor para cada widget conectado. Simula chegada de dados do Arduino
         value_generators = {
             DataTypes.BOOL: lambda: bool(random.randint(0, 1)),
             DataTypes.CHAR: lambda: random.choice('ABCDEFGHIJKLMOPQRSTUVWXYZ'),
@@ -56,6 +57,22 @@ class DataGateway:
         cls.timer = QTimer()
         cls.timer.timeout.connect(vars_mock)
         cls.timer.start(1000)
+
+    @classmethod
+    def add_variable(cls, var_id: int, var_type: str, data_type: str, name: str = None, description: str = None):        
+        assert isinstance(var_id, int)
+        assert var_id in range(256)
+        assert var_id not in cls._variables.keys()
+        cls._variables[var_id] = {
+            'var_type': var_type,
+            'data_type': data_type,
+            'name': name,
+            'description': description
+        }
+
+    @classmethod
+    def rm_variable(cls, var_id):
+        cls._variables.pop(var_id)
 
     @classmethod
     def get_new_chart(cls):
@@ -106,7 +123,7 @@ class DataGateway:
         Este método deve ser usado no widget, quando o usuário clica para enviar o valor.
         Ex.: widget.clicked.connect(DataGateway.handle_bool_flag_from_widget)
         """
-        # assert var_id in cls._variables.keys()
+        assert var_id in cls._variables.keys()
         print(f'var_id: {var_id}\tBooleanValue: {value}')
 
     @classmethod
@@ -116,7 +133,7 @@ class DataGateway:
         Este método deve ser usado no widget, quando o usuário clica para enviar o valor.
         Ex.: widget.clicked.connect(DataGateway.handle_chart_flag_from_widget)
         """
-        # assert var_id in cls._variables.keys()
+        assert var_id in cls._variables.keys()
         print(f'var_id: {var_id}\tCharValue: {value}')
 
     @classmethod
@@ -126,7 +143,7 @@ class DataGateway:
         Este método deve ser usado no widget, quando o usuário clica para enviar o valor.
         Ex.: widget.clicked.connect(DataGateway.handle_int_flag_from_widget)
         """
-        # assert var_id in cls._variables.keys()
+        assert var_id in cls._variables.keys()
         print(f'var_id: {var_id}\tIntValue: {value}')
 
     @classmethod
@@ -136,13 +153,15 @@ class DataGateway:
         Este método deve ser usado no widget, quando o usuário clica para enviar o valor.
         Ex.: widget.clicked.connect(DataGateway.handle_float_flag_from_widget)
         """
-        # assert var_id in cls._variables.keys()
+        assert var_id in cls._variables.keys()
         print(f'var_id: {var_id}\tFloatValue: {value}')
 
 
 class DataGatewaySignals(QObject):
     update_charts = Signal(dict)
 
+    # # Exemplo de como pode conectar widgets para envio de valores (do ASCADA para o Arduino):
+    # # No widget crie um objeto Signal que emitirá o valor quando o usuário clicar para enviar
     # _widget_flag_bool = Signal(int, bool)
     # _widget_flag_char = Signal(int, str)
     # _widget_flag_int = Signal(int, int)
@@ -151,21 +170,22 @@ class DataGatewaySignals(QObject):
     # def __init__(self, parent = None) -> None:
     #     super().__init__(parent=parent)
 
-        
+    # #   Conecte o sinal do widget ao método estático adequado (depende do tipo) da classe DataGateway
     #     self._widget_flag_bool.connect(DataGateway.handle_bool_flag_from_widget)
     #     self._widget_flag_char.connect(DataGateway.handle_chart_flag_from_widget)
     #     self._widget_flag_int.connect(DataGateway.handle_int_flag_from_widget)
     #     self._widget_flag_float.connect(DataGateway.handle_float_flag_from_widget)
 
     #     def emit_values():
-    #         self._widget_flag_bool.emit(1, True)
-    #         self._widget_flag_char.emit(1, 'C')
-    #         self._widget_flag_int.emit(1, 123)
-    #         self._widget_flag_float.emit(1, 123.123)
+    # #       Quando o usuário clica no botão para enviar o widget emita o id da variável e o valor valor
+    #         self._widget_flag_bool.emit(5, True)
+    #         self._widget_flag_char.emit(6, 'C')
+    #         self._widget_flag_int.emit(7, 123)
+    #         self._widget_flag_float.emit(8, 123.123)
 
     #     self._timer = QTimer()
     #     self._timer.timeout.connect(emit_values)
-    #     # self._timer.setSingleShot(True)
+    #     self._timer.setSingleShot(True)
     #     self._timer.start(3000)
 
 
