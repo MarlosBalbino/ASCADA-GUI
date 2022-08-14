@@ -48,7 +48,6 @@ class DataGateway:
         }
 
         def vars_mock():
-            print('vars_mock')
             for var_id, handler in cls._arriving_flags_handlers.items():
                 print(var_id)
                 data_type = cls._variables[var_id]['data_type']
@@ -100,9 +99,74 @@ class DataGateway:
         except KeyError:
             raise ValueError(f'The variable with id "{var_id}" is not connected to widget Slot!')
 
+    @classmethod
+    @Slot(int, bool)
+    def handle_bool_flag_from_widget(cls, var_id, value):
+        """
+        Este método deve ser usado no widget, quando o usuário clica para enviar o valor.
+        Ex.: widget.clicked.connect(DataGateway.handle_bool_flag_from_widget)
+        """
+        # assert var_id in cls._variables.keys()
+        print(f'var_id: {var_id}\tBooleanValue: {value}')
+
+    @classmethod
+    @Slot(int, str)
+    def handle_chart_flag_from_widget(cls, var_id, value):
+        """
+        Este método deve ser usado no widget, quando o usuário clica para enviar o valor.
+        Ex.: widget.clicked.connect(DataGateway.handle_chart_flag_from_widget)
+        """
+        # assert var_id in cls._variables.keys()
+        print(f'var_id: {var_id}\tCharValue: {value}')
+
+    @classmethod
+    @Slot(int, int)
+    def handle_int_flag_from_widget(cls, var_id, value):
+        """
+        Este método deve ser usado no widget, quando o usuário clica para enviar o valor.
+        Ex.: widget.clicked.connect(DataGateway.handle_int_flag_from_widget)
+        """
+        # assert var_id in cls._variables.keys()
+        print(f'var_id: {var_id}\tIntValue: {value}')
+
+    @classmethod
+    @Slot(int, float)
+    def handle_float_flag_from_widget(cls, var_id, value):
+        """
+        Este método deve ser usado no widget, quando o usuário clica para enviar o valor.
+        Ex.: widget.clicked.connect(DataGateway.handle_float_flag_from_widget)
+        """
+        # assert var_id in cls._variables.keys()
+        print(f'var_id: {var_id}\tFloatValue: {value}')
+
 
 class DataGatewaySignals(QObject):
     update_charts = Signal(dict)
+
+    # _widget_flag_bool = Signal(int, bool)
+    # _widget_flag_char = Signal(int, str)
+    # _widget_flag_int = Signal(int, int)
+    # _widget_flag_float = Signal(int, float)
+
+    # def __init__(self, parent = None) -> None:
+    #     super().__init__(parent=parent)
+
+        
+    #     self._widget_flag_bool.connect(DataGateway.handle_bool_flag_from_widget)
+    #     self._widget_flag_char.connect(DataGateway.handle_chart_flag_from_widget)
+    #     self._widget_flag_int.connect(DataGateway.handle_int_flag_from_widget)
+    #     self._widget_flag_float.connect(DataGateway.handle_float_flag_from_widget)
+
+    #     def emit_values():
+    #         self._widget_flag_bool.emit(1, True)
+    #         self._widget_flag_char.emit(1, 'C')
+    #         self._widget_flag_int.emit(1, 123)
+    #         self._widget_flag_float.emit(1, 123.123)
+
+    #     self._timer = QTimer()
+    #     self._timer.timeout.connect(emit_values)
+    #     # self._timer.setSingleShot(True)
+    #     self._timer.start(3000)
 
 
 class _DataGateway(QRunnable):
