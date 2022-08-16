@@ -118,7 +118,8 @@ class UI_application_page_3:
         # SETS-UP THE DATA-GATEWAY (STREAMING AND GRAPH MANAGER)
         DataGateway.setup()
 
-    def add_widget(self):        
-        chart_window = ChartWindow(height=550)
-        chart_window.add_widget(DataGateway.get_new_chart())
-        self.central_frame_layout.addWidget(chart_window)
+    def add_widget(self):
+        for i in range(100):
+            chart_window = ChartWindow(height=550)
+            chart_window.add_widget(DataGateway.get_new_chart())
+            self.central_frame_layout.addWidget(chart_window)
