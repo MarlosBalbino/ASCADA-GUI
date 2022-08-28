@@ -12,23 +12,23 @@ class DataTypes:
     INT64 = 'int64'
     FLOAT32 = 'float32'
     FLOAT64 = 'float64'
-    ts_int16 = 'ts_int16'
-    ts_int32 = 'ts_int32'
-    ts_float32 = 'ts_float32'
+    ts_int16 = 'ts-int16'
+    ts_int32 = 'ts-int32'
+    ts_float32 = 'ts-float32'
 
     types = {
         # id of data type: string name of data type
-        1: 'bool8',
-        2: 'uint8',
+        1: 'bool',
+        2: 'char',
         3: 'int8',
-        4: 'uint16',
-        5: 'int16',
-        6: 'uint32',
-        7: 'int32',
-        8: 'float32',
-        9: 'ts_int16',
-        10: 'ts_int32',
-        11: 'ts_float32',
+        4: 'int16',
+        5: 'int32',
+        6: 'int64',
+        7: 'float32',
+        8: 'float64',
+        9: 'ts-int16',
+        10: 'ts-int32',
+        11: 'ts-float32',
     }
 
     open_cmd = b'\x0e'
